@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — UniResults</title>
+    <link rel="stylesheet" href="css/login.css" />
+</head>
+<body>
+
+<div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+<div class="bg-grid"></div>
+
+<div class="login-wrapper">
+    <div class="login-card">
+
+        <!-- LEFT PANEL -->
+        <div class="login-panel-left">
+            <div class="login-brand">
+                <div class="brand-icon">🎓</div>
+                <div class="brand-name">UniResults</div>
+                <div class="brand-sub">Results Management System</div>
+            </div>
+
+            <div class="login-features">
+                <div class="feature-item">
+                    <div class="feature-dot gold">📊</div>
+                    <div>
+                        <h4>Real-time Results</h4>
+                        <p>View marks and GPA instantly as lecturers upload scores.</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-dot teal">🔒</div>
+                    <div>
+                        <h4>Secure Access</h4>
+                        <p>Role-based authentication for admins, lecturers, and students.</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-dot purple">🏫</div>
+                    <div>
+                        <h4>Full Management</h4>
+                        <p>Departments, courses, enrollments — all in one platform.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="login-footer-left">
+                &copy; 2026 UniResults. All rights reserved.
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="login-panel-right">
+            <div class="login-heading">
+                <h1>Welcome back</h1>
+                <p>Sign in to access your dashboard</p>
+            </div>
+
+            <!-- Role tabs -->
+            <div class="role-tabs">
+                <button class="role-tab active" data-role="admin">Admin</button>
+                <button class="role-tab" data-role="lecturer">Lecturer</button>
+                <button class="role-tab" data-role="student">Student</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" autocomplete="off">
+                <div class="form-group-login">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">✉️</span>
+                        <input type="email" id="email" placeholder="your@university.edu" required />
+                    </div>
+                </div>
+
+                <div class="form-group-login">
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔑</span>
+                        <input type="password" id="password" placeholder="Enter your password" required />
+                        <button type="button" class="toggle-pw" id="togglePw">👁️</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <span class="btn-text">Sign In →</span>
+                    <span class="btn-spinner"></span>
+                </button>
+
+                <div class="error-msg" id="errorMsg">
+                    <span>⚠️</span>
+                    <span id="errorText">Invalid credentials.</span>
+                </div>
+            </form>
+
+            <!-- Demo credentials -->
+            <div class="demo-credentials">
+                <h5>Entities</h5>
+                <div class="demo-item">
+                    <span class="demo-role">Admin</span>
+                    <span class="demo-creds"></span>
+                    <span class="demo-creds">Admin email / password</span>
+                   <span style="color:var(--text-muted);font-size:11px;">Login</span>
+                </div>
+                <div class="demo-item">
+                    <span class="demo-role">Lecturer</span>
+                    <span class="demo-creds">lecturer email / password</span>
+                    <span style="color:var(--text-muted);font-size:11px;">Login</span>
+                </div>
+                <div class="demo-item">
+                    <span class="demo-role">Student</span>
+                    <span class="demo-creds">student email / password</span>
+                    <span style="color:var(--text-muted);font-size:11px;">Login</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:5000/api';
+
+    // Role tab switching (visual only - actual role determined by backend)
+    document.querySelectorAll('.role-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+        });
+    });
+
+    // Toggle password visibility
+    const togglePw = document.getElementById('togglePw');
+    const pwInput = document.getElementById('password');
+    let pwVisible = false;
+    togglePw.addEventListener('click', () => {
+        pwVisible = !pwVisible;
+        pwInput.type = pwVisible ? 'text' : 'password';
+        togglePw.textContent = pwVisible ? '🙈' : '👁️';
+    });
+
+    // Fill demo credentials
+    function fillDemo(email, pw) {
+        document.getElementById('email').value = email;
+        document.getElementById('password').value = pw;
+    }
+
+    // Login form submit
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const errorText = document.getElementById('errorText');
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        errorMsg.classList.remove('show');
+        loginBtn.classList.add('loading');
+        loginBtn.disabled = true;
+
+        try {
+            const response = await fetch(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                showError(data.message || 'Login failed.');
+                return;
+            }
+
+            // Save auth data
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            // Redirect based on role
+            const role = data.user.role;
+            if (role === 'admin') {
+                window.location.href = 'admin-dashboard.html';
+            } else if (role === 'lecturer') {
+                window.location.href = 'lecturer-dashboard.html';
+            } else if (role === 'student') {
+                window.location.href = 'student-dashboard.html';
+            } else {
+                showError('Unknown role. Contact administrator.');
+            }
+
+        } catch (err) {
+            showError('Cannot connect to server. Make sure the backend is running on port 5000.');
+        } finally {
+            loginBtn.classList.remove('loading');
+            loginBtn.disabled = false;
+        }
+    });
+
+    function showError(msg) {
+        errorText.textContent = msg;
+        errorMsg.classList.add('show');
+    }
+
+    // If already logged in, redirect
+    const existingToken = localStorage.getItem('token');
+    const existingUser = localStorage.getItem('user');
+    if (existingToken && existingUser) {
+        try {
+            const user = JSON.parse(existingUser);
+            if (user.role === 'admin') window.location.href = 'admin-dashboard.html';
+            else if (user.role === 'lecturer') window.location.href = 'lecturer-dashboard.html';
+            else if (user.role === 'student') window.location.href = 'student-dashboard.html';
+        } catch(e) { localStorage.clear(); }
+    }
+</script>
+</body>
+</html>

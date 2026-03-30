@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Dashboard — UniResults</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+    // jsPDF loader with fallback check
+    window.jspdfLoaded = false;
+    </script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+        onload="window.jspdfLoaded = true; console.log('jsPDF loaded');"
+        onerror="console.error('jsPDF failed to load from CDN');">
+    </script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"
+        onload="console.log('autoTable loaded');"
+        onerror="console.error('autoTable failed to load');">
+    </script>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="app-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">🎓</div>
+            <h2>UniResults</h2>
+            <span>Student Portal</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-title">Overview</div>
+            <div class="nav-item active" data-page="dashboard">
+                <div class="nav-icon">📊</div> Dashboard
+            </div>
+
+            <div class="nav-section-title">Academics</div>
+            <div class="nav-item" data-page="courses">
+                <div class="nav-icon">📚</div> My Courses
+            </div>
+            <div class="nav-item" data-page="results">
+                <div class="nav-icon">📋</div> My Results
+            </div>
+            <div class="nav-item" data-page="gpa">
+                <div class="nav-icon">🏆</div> GPA Summary
+            </div>
+            <div class="nav-item" data-page="profile">
+                <div class="nav-icon">👤</div> My Profile
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="sidebarAvatar">ST</div>
+                <div>
+                    <div class="user-name" id="sidebarUserName">Student</div>
+                    <div class="user-role" id="sidebarUserRole">student</div>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <header class="topbar">
+            <button class="hamburger" id="hamburger">☰</button>
+            <div>
+                <div class="topbar-title" id="topbarTitle">Dashboard</div>
+                <div class="topbar-subtitle">Student Portal</div>
+            </div>
+            <div class="topbar-actions">
+                <div class="topbar-avatar" id="topbarAvatar" onclick="navigateTo('profile')" title="My Profile"></div>
+                <span class="badge badge-success">Student</span>
+                <span class="badge badge-muted" id="topbarMatric" style="font-family:monospace;"></span>
+            </div>
+        </header>
+
+        <div class="content-area">
+
+            <!-- ===== DASHBOARD PAGE ===== -->
+            <div class="page active" id="page-dashboard">
+                <div class="page-header">
+                    <h2 id="studentWelcome">Welcome 👋</h2>
+                    <p id="studentSubtitle">Here's your academic overview.</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card gold">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-value" id="statEnrolled">—</div>
+                        <div class="stat-label">Courses Enrolled</div>
+                    </div>
+                    <div class="stat-card teal">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-value" id="statResultsOut">—</div>
+                        <div class="stat-label">Results Available</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-value" id="statGPA">—</div>
+                        <div class="stat-label">Current GPA</div>
+                    </div>
+                    <div class="stat-card purple">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value" id="statClass">—</div>
+                        <div class="stat-label">Classification</div>
+                    </div>
+                </div>
+
+                <!-- GPA Ring Card -->
+                <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:24px;" class="dash-bottom">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">GPA Gauge</div></div>
+                        <div class="gpa-ring-wrap">
+                            <div class="gpa-circle">
+                                <svg viewBox="0 0 120 120" width="120" height="120">
+                                    <circle class="track" cx="60" cy="60" r="50"/>
+                                    <circle class="progress" id="gpaRingProgress" cx="60" cy="60" r="50"
+                                        stroke-dasharray="314"
+                                        stroke-dashoffset="314"/>
+                                </svg>
+                                <div class="gpa-value">
+                                    <div class="gpa-number" id="gpaRingValue">—</div>
+                                    <div class="gpa-label">/ 5.0</div>
+                                </div>
+                            </div>
+                            <div class="gpa-details">
+                                <div class="gpa-classification" id="gpaClassText">Pending Results</div>
+                                <div class="gpa-meta" id="gpaMeta">No results yet</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Grade Distribution</div></div>
+                        <div class="grade-bars" id="gradeBars">
+                            <div class="grade-bar-item">
+                                <div class="grade-bar-fill grade-A" style="height:4px;" id="barA"></div>
+                                <div class="grade-bar-label">A</div>
+                                <div class="grade-bar-count" id="cntA">0</div>
+                            </div>
+                            <div class="grade-bar-item">
+                                <div class="grade-bar-fill grade-B" style="height:4px;" id="barB"></div>
+                                <div class="grade-bar-label">B</div>
+                                <div class="grade-bar-count" id="cntB">0</div>
+                            </div>
+                            <div class="grade-bar-item">
+                                <div class="grade-bar-fill grade-C" style="height:4px;" id="barC"></div>
+                                <div class="grade-bar-label">C</div>
+                                <div class="grade-bar-count" id="cntC">0</div>
+                            </div>
+                            <div class="grade-bar-item">
+                                <div class="grade-bar-fill grade-D" style="height:4px;" id="barD"></div>
+                                <div class="grade-bar-label">D</div>
+                                <div class="grade-bar-count" id="cntD">0</div>
+                            </div>
+                            <div class="grade-bar-item">
+                                <div class="grade-bar-fill grade-E" style="height:4px;" id="barE"></div>
+                                <div class="grade-bar-label">E</div>
+                                <div class="grade-bar-count" id="cntE">0</div>
+                            </div>
+                            <div class="grade-bar-item">
+                                <div class="grade-bar-fill grade-F" style="height:4px;" id="barF"></div>
+                                <div class="grade-bar-label">F</div>
+                                <div class="grade-bar-count" id="cntF">0</div>
+                            </div>
+                        </div>
+                        <div style="font-size:12px;color:var(--text-muted);margin-top:16px;">Based on uploaded results</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== MY COURSES PAGE ===== -->
+            <div class="page" id="page-courses">
+                <div class="page-header">
+                    <h2>My Courses</h2>
+                    <p>Courses you are enrolled in this academic year.</p>
+                </div>
+                <div id="studentCoursesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
+                    <div class="inline-loader"><div class="spinner"></div><span>Loading...</span></div>
+                </div>
+            </div>
+
+            <!-- ===== MY RESULTS PAGE ===== -->
+            <div class="page" id="page-results">
+                <div class="page-header">
+                    <h2>My Results</h2>
+                    <p>Your marks for all enrolled courses.</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Results Transcript</div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <button class="btn btn-outline btn-sm" onclick="loadStudentResults()">🔄 Refresh</button>
+                            <button class="btn btn-primary btn-sm" onclick="downloadResultsPDF()">⬇️ Download PDF</button>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Course Code</th><th>Course Title</th><th>Credits</th>
+                                    <th>CA</th><th>Exam</th><th>Total</th><th>Grade</th><th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px;">Loading results...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== GPA SUMMARY PAGE ===== -->
+            <div class="page" id="page-gpa">
+                <div class="page-header">
+                    <h2>GPA Summary</h2>
+                    <p>Your cumulative grade point average and classification.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">GPA Overview</div></div>
+                        <div class="gpa-ring-wrap" style="flex-direction:column;align-items:center;padding:16px 0;">
+                            <div class="gpa-circle" style="width:160px;height:160px;">
+                                <svg viewBox="0 0 160 160" width="160" height="160">
+                                    <circle class="track" cx="80" cy="80" r="65"/>
+                                    <circle class="progress" id="gpaPageRing" cx="80" cy="80" r="65"
+                                        stroke-dasharray="408"
+                                        stroke-dashoffset="408"/>
+                                </svg>
+                                <div class="gpa-value">
+                                    <div class="gpa-number" id="gpaPageValue" style="font-size:32px;">—</div>
+                                    <div class="gpa-label">/ 5.0</div>
+                                </div>
+                            </div>
+                            <div style="text-align:center;margin-top:20px;">
+                                <div class="gpa-classification" id="gpaPageClass">—</div>
+                                <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;" id="gpaPageUnits">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Grade Breakdown</div></div>
+                        <div id="gpaBreakdown" style="display:flex;flex-direction:column;gap:12px;padding-top:4px;">
+                            <div style="text-align:center;color:var(--text-muted);padding:20px;">Loading...</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="card-header" style="margin-bottom:0;padding-bottom:0;">
+                            <div class="card-title" style="font-size:14px;">Grade Scale Reference</div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px;">
+                            <div style="font-size:12px;color:var(--text-secondary);">🟢 A: 70–100 → 5.0 GP</div>
+                            <div style="font-size:12px;color:var(--text-secondary);">🔵 B: 60–69 → 4.0 GP</div>
+                            <div style="font-size:12px;color:var(--text-secondary);">🟡 C: 50–59 → 3.0 GP</div>
+                            <div style="font-size:12px;color:var(--text-secondary);">🟠 D: 45–49 → 2.0 GP</div>
+                            <div style="font-size:12px;color:var(--text-secondary);">🟤 E: 40–44 → 1.0 GP</div>
+                            <div style="font-size:12px;color:var(--text-secondary);">🔴 F: 0–39 → 0.0 GP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== PROFILE PAGE ===== -->
+            <div class="page" id="page-profile">
+                <!-- HERO SECTION -->
+                <div class="profile-hero">
+                    <div class="profile-avatar-wrap">
+                        <div id="heroAvatarContainer"></div>
+                        <div class="profile-avatar-edit-btn" onclick="switchProfileTab('picture')" title="Change photo">📷</div>
+                    </div>
+                    <div class="profile-hero-info">
+                        <div class="profile-hero-name" id="heroName">Loading...</div>
+                        <div class="profile-hero-role" id="heroRole"></div>
+                        <div class="profile-hero-meta" id="heroMeta"></div>
+                        <div class="profile-hero-badge" id="heroBadge"></div>
+                    </div>
+                </div>
+
+                <!-- TABS -->
+                <div class="profile-tabs">
+                    <button class="profile-tab active" onclick="switchProfileTab('info')">👤 Personal Info</button>
+                    <button class="profile-tab" onclick="switchProfileTab('picture')">📷 Profile Photo</button>
+                    <button class="profile-tab" onclick="switchProfileTab('password')">🔑 Change Password</button>
+                </div>
+
+                <!-- TAB: PERSONAL INFO -->
+                <div class="profile-tab-content active" id="profileTabInfo">
+                    <div style="max-width:640px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Personal Information</div>
+                                <span class="badge badge-muted" id="profileLastUpdated"></span>
+                            </div>
+                            <form id="profileInfoForm">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>First Name *</label>
+                                        <input type="text" name="first_name" id="profileFirstName" placeholder="First name" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Last Name *</label>
+                                        <input type="text" name="last_name" id="profileLastName" placeholder="Last name" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Email Address</label>
+                                        <input type="email" id="profileEmail" disabled style="opacity:0.5;cursor:not-allowed;" />
+                                        <span style="font-size:11px;color:var(--text-muted);margin-top:4px;">Email cannot be changed. Contact admin.</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Phone Number</label>
+                                        <input type="tel" name="phone" id="profilePhone" placeholder="Phone number" />
+                                    </div>
+                                    <div class="form-group full">
+                                        <label>Bio / About</label>
+                                        <textarea name="bio" id="profileBio" placeholder="Write a short bio about yourself..." style="min-height:100px;"></textarea>
+                                    </div>
+                                </div>
+                                <div style="margin-top:8px;">
+                                    <!-- Role-specific readonly info shown here dynamically -->
+                                    <div id="roleSpecificInfo" style="background:var(--surface-2);border-radius:8px;padding:16px;margin-bottom:16px;display:none;">
+                                        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:12px;">Academic Details</div>
+                                        <div id="roleSpecificFields" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;"></div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" id="profileInfoBtn">💾 Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: PROFILE PHOTO -->
+                <div class="profile-tab-content" id="profileTabPicture">
+                    <div style="max-width:500px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Profile Photo</div>
+                            </div>
+
+                            <!-- Current picture display -->
+                            <div style="text-align:center;margin-bottom:24px;">
+                                <div id="currentPictureDisplay"></div>
+                                <div style="font-size:13px;color:var(--text-secondary);margin-top:12px;" id="currentPictureLabel">No profile photo set</div>
+                            </div>
+
+                            <!-- Upload zone -->
+                            <div class="picture-upload-zone" id="uploadZone">
+                                <input type="file" id="pictureFileInput" accept="image/jpeg,image/png,image/webp" />
+                                <div class="picture-preview-placeholder" id="previewPlaceholder">🖼️</div>
+                                <img id="previewImage" class="picture-preview" style="display:none;" alt="Preview" />
+                                <div class="upload-zone-text">Click or drag & drop your photo here</div>
+                                <div class="upload-zone-hint">JPG, PNG or WEBP · Maximum 3MB</div>
+                            </div>
+
+                            <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;">
+                                <button class="btn btn-primary" id="uploadPictureBtn" onclick="uploadProfilePicture()" style="flex:1;" disabled>
+                                    ⬆️ Upload Photo
+                                </button>
+                                <button class="btn btn-danger btn-sm" id="removePictureBtn" onclick="removeProfilePicture()" style="display:none;">
+                                    🗑️ Remove Photo
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tips card -->
+                        <div class="card" style="margin-top:16px;">
+                            <div class="card-header"><div class="card-title" style="font-size:14px;">Photo Tips</div></div>
+                            <div style="font-size:13px;color:var(--text-secondary);line-height:2;">
+                                <div>✅ Use a clear, well-lit photo of your face</div>
+                                <div>✅ Square images work best (1:1 ratio)</div>
+                                <div>✅ Minimum recommended size: 200×200 px</div>
+                                <div>❌ Avoid blurry or dark images</div>
+                                <div>❌ File size must be under 3MB</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: CHANGE PASSWORD -->
+                <div class="profile-tab-content" id="profileTabPassword">
+                    <div style="max-width:480px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Change Password</div>
+                            </div>
+                            <form id="changePasswordForm">
+                                <div class="form-grid single">
+                                    <div class="form-group">
+                                        <label>Current Password *</label>
+                                        <div style="position:relative;">
+                                            <input type="password" name="current_password" id="currentPassword" placeholder="Your current password" required style="padding-right:44px;" />
+                                            <button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;" onclick="togglePasswordField('currentPassword', this)">👁️</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>New Password *</label>
+                                        <div style="position:relative;">
+                                            <input type="password" name="new_password" id="newPassword" placeholder="Enter new password" required style="padding-right:44px;" />
+                                            <button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;" onclick="togglePasswordField('newPassword', this)">👁️</button>
+                                        </div>
+                                        <div class="password-strength" id="passwordStrengthBar">
+                                            <div class="password-strength-fill" id="passwordStrengthFill"></div>
+                                        </div>
+                                        <div class="password-strength-label" id="passwordStrengthLabel" style="color:var(--text-muted);"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Confirm New Password *</label>
+                                        <div style="position:relative;">
+                                            <input type="password" name="confirm_password" id="confirmPassword" placeholder="Repeat new password" required style="padding-right:44px;" />
+                                            <button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;" onclick="togglePasswordField('confirmPassword', this)">👁️</button>
+                                        </div>
+                                        <div id="passwordMatchMsg" style="font-size:11px;margin-top:4px;"></div>
+                                    </div>
+                                </div>
+                                <div style="background:var(--surface-2);border-radius:8px;padding:14px;margin-bottom:16px;margin-top:8px;">
+                                    <div style="font-size:12px;color:var(--text-muted);line-height:1.8;">
+                                        Password must be at least 6 characters. Use a mix of letters, numbers and symbols for a stronger password.
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-full" id="changePasswordBtn">🔑 Update Password</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /content-area -->
+    </div><!-- /main-content -->
+</div><!-- /app-layout -->
+
+<script src="js/utils.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/student.js"></script>
+</body>
+</html>

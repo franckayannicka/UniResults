@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard — UniResults</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+    // jsPDF loader with fallback check
+    window.jspdfLoaded = false;
+    </script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+        onload="window.jspdfLoaded = true; console.log('jsPDF loaded');"
+        onerror="console.error('jsPDF failed to load from CDN');">
+    </script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"
+        onload="console.log('autoTable loaded');"
+        onerror="console.error('autoTable failed to load');">
+    </script>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="app-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">🎓</div>
+            <h2>UniResults</h2>
+            <span>Admin Portal</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-title">Overview</div>
+            <div class="nav-item active" data-page="dashboard">
+                <div class="nav-icon">📊</div> Dashboard
+            </div>
+
+            <div class="nav-section-title">Management</div>
+            <div class="nav-item" data-page="departments">
+                <div class="nav-icon">🏛️</div> Departments
+            </div>
+            <div class="nav-item" data-page="students">
+                <div class="nav-icon">🎓</div> Students
+            </div>
+            <div class="nav-item" data-page="lecturers">
+                <div class="nav-icon">👨‍🏫</div> Lecturers
+            </div>
+            <div class="nav-item" data-page="courses">
+                <div class="nav-icon">📚</div> Courses
+            </div>
+
+            <div class="nav-section-title">Operations</div>
+            <div class="nav-item" data-page="assign">
+                <div class="nav-icon">🔗</div> Assign Courses
+            </div>
+            <div class="nav-item" data-page="enroll">
+                <div class="nav-icon">📋</div> Enroll Students
+            </div>
+            <div class="nav-item" data-page="users">
+                <div class="nav-icon">👥</div> All Users
+            </div>
+
+            <div class="nav-section-title">Academic Records</div>
+            <div class="nav-item" data-page="enrollments">
+                <div class="nav-icon">📋</div> Enrollments
+            </div>
+            <div class="nav-item" data-page="assignments">
+                <div class="nav-icon">🔗</div> Assignments
+            </div>
+
+            <div class="nav-section-title">Account</div>
+            <div class="nav-item" data-page="profile">
+                <div class="nav-icon">👤</div> My Profile
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="sidebarAvatar">AD</div>
+                <div>
+                    <div class="user-name" id="sidebarUserName">Administrator</div>
+                    <div class="user-role" id="sidebarUserRole">admin</div>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">🚪 Sign Out</button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <header class="topbar">
+            <button class="hamburger" id="hamburger">☰</button>
+            <div>
+                <div class="topbar-title" id="topbarTitle">Dashboard</div>
+                <div class="topbar-subtitle">University Results Management System</div>
+            </div>
+            <div class="topbar-actions">
+                <div class="topbar-avatar" id="topbarAvatar" onclick="navigateTo('profile')" title="My Profile"></div>
+                <span class="badge badge-gold">Admin</span>
+            </div>
+        </header>
+
+        <div class="content-area">
+
+            <!-- ===== DASHBOARD PAGE ===== -->
+            <div class="page active" id="page-dashboard">
+                <div class="page-header">
+                    <h2>Welcome back 👋</h2>
+                    <p>Here's a summary of your university system.</p>
+                </div>
+
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card gold">
+                        <div class="stat-icon">🎓</div>
+                        <div class="stat-value" id="statStudents">—</div>
+                        <div class="stat-label">Total Students</div>
+                    </div>
+                    <div class="stat-card teal">
+                        <div class="stat-icon">👨‍🏫</div>
+                        <div class="stat-value" id="statLecturers">—</div>
+                        <div class="stat-label">Lecturers</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-value" id="statCourses">—</div>
+                        <div class="stat-label">Courses</div>
+                    </div>
+                    <div class="stat-card purple">
+                        <div class="stat-icon">🏛️</div>
+                        <div class="stat-value" id="statDepartments">—</div>
+                        <div class="stat-label">Departments</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-value" id="statEnrollments">—</div>
+                        <div class="stat-label">Enrollments</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-value" id="statMarks">—</div>
+                        <div class="stat-label">Marks Uploaded</div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;" class="dashboard-bottom">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Quick Actions</div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:10px;">
+                            <button class="btn btn-primary" onclick="navigateTo('students')">➕ Register Student</button>
+                            <button class="btn btn-teal" onclick="navigateTo('lecturers')">➕ Register Lecturer</button>
+                            <button class="btn btn-outline" onclick="navigateTo('courses')">📚 Create Course</button>
+                            <button class="btn btn-outline" onclick="navigateTo('departments')">🏛️ Add Department</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Recent Activity</div>
+                        </div>
+                        <div id="recentActivity" style="color:var(--text-muted);font-size:14px;text-align:center;padding:20px 0;">
+                            System stats loaded successfully ✅
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">📥 Download Reports</div></div>
+                        <div style="display:flex;flex-direction:column;gap:10px;">
+                            <button class="btn btn-primary" onclick="downloadAllStudentsPDF()">🎓 All Students Report</button>
+                            <button class="btn btn-teal" onclick="downloadAllLecturersPDF()">👨‍🏫 All Lecturers Report</button>
+                            <button class="btn btn-outline" onclick="downloadAllCoursesPDF()">📚 All Courses Report</button>
+                            <button class="btn btn-outline" onclick="downloadFullResultsPDF()">📊 Full Results Report</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== DEPARTMENTS PAGE ===== -->
+            <div class="page" id="page-departments">
+                <div class="page-header">
+                    <h2>Departments</h2>
+                    <p>Manage university departments.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:24px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Add Department</div>
+                        </div>
+                        <form id="deptForm">
+                            <div class="form-grid single">
+                                <div class="form-group">
+                                    <label>Department Name *</label>
+                                    <input type="text" name="name" placeholder="e.g. Computer Science" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Department Code *</label>
+                                    <input type="text" name="code" placeholder="e.g. CSC" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <textarea name="description" placeholder="Optional description..."></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full mt-4" id="deptBtn">Create Department</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">All Departments</div>
+                            <button class="btn btn-outline btn-sm" onclick="loadDepartments()">🔄 Refresh</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>Code</th><th>Name</th><th>Created</th><th>Actions</th></tr></thead>
+                                <tbody id="deptTableBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== STUDENTS PAGE ===== -->
+            <div class="page" id="page-students">
+                <div class="page-header">
+                    <h2>Students</h2>
+                    <p>Register and manage student accounts.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:24px;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Register Student</div></div>
+                        <form id="studentForm">
+                            <div class="form-grid single">
+                                <div class="form-group">
+                                    <label>First Name *</label>
+                                    <input type="text" name="first_name" placeholder="First name" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Last Name *</label>
+                                    <input type="text" name="last_name" placeholder="Last name" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Email Address *</label>
+                                    <input type="email" name="email" placeholder="student@university.edu" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Password *</label>
+                                    <input type="password" name="password" placeholder="Set a password" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Matric Number *</label>
+                                    <div style="display:flex;gap:10px;align-items:center;">
+                                        <input type="text" id="matricNumber" name="matric_number" placeholder="e.g. CSC/2024/001" required />
+                                        <button type="button" class="btn btn-outline btn-sm" id="autoMatricBtn">Auto-Generate <span class="btn-spinner" id="autoMatricSpinner" style="display:none;"></span></button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Department *</label>
+                                    <select name="department_id" id="studentDeptSelect" required>
+                                        <option value="">-- Select Department --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Level</label>
+                                    <select name="level">
+                                        <option value="100">100 Level</option>
+                                        <option value="200">200 Level</option>
+                                        <option value="300">300 Level</option>
+                                        <option value="400">400 Level</option>
+                                        <option value="500">500 Level</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" name="phone" placeholder="Phone number" />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full mt-4" id="studentBtn">Register Student</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Registered Students</div>
+                            <button class="btn btn-outline btn-sm" onclick="loadStudents()">🔄 Refresh</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>Matric No.</th><th>Name</th><th>Department</th><th>Level</th><th>Actions</th></tr></thead>
+                                <tbody id="studentsTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== LECTURERS PAGE ===== -->
+            <div class="page" id="page-lecturers">
+                <div class="page-header">
+                    <h2>Lecturers</h2>
+                    <p>Register and manage lecturers.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:24px;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Register Lecturer</div></div>
+                        <form id="lecturerForm">
+                            <div class="form-grid single">
+                                <div class="form-group">
+                                    <label>Title</label>
+                                    <select name="title">
+                                        <option value="">-- Select Title --</option>
+                                        <option>Dr.</option><option>Prof.</option>
+                                        <option>Mr.</option><option>Mrs.</option><option>Ms.</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>First Name *</label>
+                                    <input type="text" name="first_name" placeholder="First name" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Last Name *</label>
+                                    <input type="text" name="last_name" placeholder="Last name" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Email Address *</label>
+                                    <input type="email" name="email" placeholder="lecturer@university.edu" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Password *</label>
+                                    <input type="password" name="password" placeholder="Set a password" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Staff ID *</label>
+                                    <div style="display:flex;gap:10px;align-items:center;">
+                                        <input type="text" id="staffId" name="staff_id" placeholder="e.g. STAFF/CSC/001" required />
+                                        <button type="button" class="btn btn-outline btn-sm" id="autoStaffBtn">Auto-Generate <span class="btn-spinner" id="autoStaffSpinner" style="display:none;"></span></button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Department *</label>
+                                    <select name="department_id" id="lecturerDeptSelect" required>
+                                        <option value="">-- Select Department --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Specialization</label>
+                                    <input type="text" name="specialization" placeholder="e.g. Machine Learning" />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-teal btn-full mt-4" id="lecturerBtn">Register Lecturer</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Registered Lecturers</div>
+                            <button class="btn btn-outline btn-sm" onclick="loadLecturers()">🔄 Refresh</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>Staff ID</th><th>Name</th><th>Department</th><th>Specialization</th><th>Actions</th></tr></thead>
+                                <tbody id="lecturersTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== COURSES PAGE ===== -->
+            <div class="page" id="page-courses">
+                <div class="page-header">
+                    <h2>Courses</h2>
+                    <p>Create and manage university courses.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:24px;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Create Course</div></div>
+                        <form id="courseForm">
+                            <div class="form-grid single">
+                                <div class="form-group">
+                                    <label>Course Code *</label>
+                                    <input type="text" name="course_code" placeholder="e.g. CSC301" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Course Title *</label>
+                                    <input type="text" name="course_title" placeholder="e.g. Data Structures" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Department *</label>
+                                    <select name="department_id" id="courseDeptSelect" required>
+                                        <option value="">-- Select Department --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Credit Units</label>
+                                    <input type="number" name="credit_units" value="3" min="1" max="6" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Semester</label>
+                                    <select name="semester">
+                                        <option value="first">First Semester</option>
+                                        <option value="second">Second Semester</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Level</label>
+                                    <select name="level">
+                                        <option value="100">100 Level</option>
+                                        <option value="200">200 Level</option>
+                                        <option value="300">300 Level</option>
+                                        <option value="400">400 Level</option>
+                                        <option value="500">500 Level</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <textarea name="description" placeholder="Optional description..."></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full mt-4" id="courseBtn">Create Course</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">All Courses</div>
+                            <button class="btn btn-outline btn-sm" onclick="loadCourses()">🔄 Refresh</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>Code</th><th>Title</th><th>Dept.</th><th>Units</th><th>Semester</th><th>Level</th><th>Actions</th></tr></thead>
+                                <tbody id="coursesTableBody"><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== ASSIGN COURSES PAGE ===== -->
+            <div class="page" id="page-assign">
+                <div class="page-header">
+                    <h2>Assign Courses to Lecturers</h2>
+                    <p>Link courses to lecturers for a given academic year.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">New Assignment</div></div>
+                        <form id="assignForm">
+                            <div class="form-grid single">
+                                <div class="form-group">
+                                    <label>Lecturer *</label>
+                                    <select name="lecturer_id" id="assignLecturerSelect" required>
+                                        <option value="">-- Select Lecturer --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Course *</label>
+                                    <select name="course_id" id="assignCourseSelect" required>
+                                        <option value="">-- Select Course --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Academic Year</label>
+                                    <input type="text" name="academic_year" value="2024/2025" placeholder="2024/2025" />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full mt-4" id="assignBtn">Assign Course</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Instructions</div></div>
+                        <div style="font-size:14px;color:var(--text-secondary);line-height:2;">
+                            <p>1. Select a lecturer from the dropdown.</p>
+                            <p>2. Choose the course to assign.</p>
+                            <p>3. Set the academic year (default: 2024/2025).</p>
+                            <p>4. Click <strong style="color:var(--gold)">Assign Course</strong>.</p>
+                            <br/>
+                            <p style="color:var(--text-muted);font-size:12px;">Once assigned, the lecturer can view the course and upload marks for enrolled students.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== ENROLL STUDENTS PAGE ===== -->
+            <div class="page" id="page-enroll">
+                <div class="page-header">
+                    <h2>Enroll Students</h2>
+                    <p>Register students into courses.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">New Enrollment</div></div>
+                        <form id="enrollForm">
+                            <div class="form-grid single">
+                                <div class="form-group">
+                                    <label>Student *</label>
+                                    <select name="student_id" id="enrollStudentSelect" required>
+                                        <option value="">-- Select Student --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Course *</label>
+                                    <select name="course_id" id="enrollCourseSelect" required>
+                                        <option value="">-- Select Course --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Academic Year</label>
+                                    <input type="text" name="academic_year" value="2024/2025" />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-teal btn-full mt-4" id="enrollBtn">Enroll Student</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Instructions</div></div>
+                        <div style="font-size:14px;color:var(--text-secondary);line-height:2;">
+                            <p>1. Select a student from the dropdown.</p>
+                            <p>2. Choose the course to enroll them in.</p>
+                            <p>3. Set the academic year.</p>
+                            <p>4. Click <strong style="color:var(--teal)">Enroll Student</strong>.</p>
+                            <br/>
+                            <p style="color:var(--text-muted);font-size:12px;">Enrolled students appear in the lecturer's course roster and can view their results once marks are uploaded.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== ALL USERS PAGE ===== -->
+            <div class="page" id="page-users">
+                <div class="page-header">
+                    <h2>All Users</h2>
+                    <p>View all registered users in the system.</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">User Directory</div>
+                        <button class="btn btn-outline btn-sm" onclick="loadUsers()">🔄 Refresh</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>ID/Matric</th><th>Department</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+                            <tbody id="usersTableBody"><tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== ENROLLMENTS PAGE ===== -->
+            <div class="page" id="page-enrollments">
+                <div class="page-header">
+                    <h2>Enrollments</h2>
+                    <p>View and manage all course enrollments.</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Enrollment Records</div>
+                        <button class="btn btn-outline btn-sm" onclick="loadEnrollments()">🔄 Refresh</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Student</th><th>Matric</th><th>Course</th><th>Academic Year</th><th>Actions</th></tr></thead>
+                            <tbody id="enrollmentsTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== ASSIGNMENTS PAGE ===== -->
+            <div class="page" id="page-assignments">
+                <div class="page-header">
+                    <h2>Assignments</h2>
+                    <p>Lecturer-course assignments for this session.</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Course Assignments</div>
+                        <button class="btn btn-outline btn-sm" onclick="loadAssignments()">🔄 Refresh</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Course</th><th>Lecturer</th><th>Academic Year</th><th>Actions</th></tr></thead>
+                            <tbody id="assignmentsTableBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== PROFILE PAGE ===== -->
+            <div class="page" id="page-profile">
+                <!-- HERO SECTION -->
+                <div class="profile-hero">
+                    <div class="profile-avatar-wrap">
+                        <div id="heroAvatarContainer"></div>
+                        <div class="profile-avatar-edit-btn" onclick="switchProfileTab('picture')" title="Change photo">📷</div>
+                    </div>
+                    <div class="profile-hero-info">
+                        <div class="profile-hero-name" id="heroName">Loading...</div>
+                        <div class="profile-hero-role" id="heroRole"></div>
+                        <div class="profile-hero-meta" id="heroMeta"></div>
+                        <div class="profile-hero-badge" id="heroBadge"></div>
+                    </div>
+                </div>
+
+                <!-- TABS -->
+                <div class="profile-tabs">
+                    <button class="profile-tab active" onclick="switchProfileTab('info')">👤 Personal Info</button>
+                    <button class="profile-tab" onclick="switchProfileTab('picture')">📷 Profile Photo</button>
+                    <button class="profile-tab" onclick="switchProfileTab('password')">🔑 Change Password</button>
+                </div>
+
+                <!-- TAB: PERSONAL INFO -->
+                <div class="profile-tab-content active" id="profileTabInfo">
+                    <div style="max-width:640px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Personal Information</div>
+                                <span class="badge badge-muted" id="profileLastUpdated"></span>
+                            </div>
+                            <form id="profileInfoForm">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>First Name *</label>
+                                        <input type="text" name="first_name" id="profileFirstName" placeholder="First name" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Last Name *</label>
+                                        <input type="text" name="last_name" id="profileLastName" placeholder="Last name" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Email Address</label>
+                                        <input type="email" id="profileEmail" disabled style="opacity:0.5;cursor:not-allowed;" />
+                                        <span style="font-size:11px;color:var(--text-muted);margin-top:4px;">Email cannot be changed. Contact admin.</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Phone Number</label>
+                                        <input type="tel" name="phone" id="profilePhone" placeholder="Phone number" />
+                                    </div>
+                                    <div class="form-group full">
+                                        <label>Bio / About</label>
+                                        <textarea name="bio" id="profileBio" placeholder="Write a short bio about yourself..." style="min-height:100px;"></textarea>
+                                    </div>
+                                </div>
+                                <div style="margin-top:8px;">
+                                    <!-- Role-specific readonly info shown here dynamically -->
+                                    <div id="roleSpecificInfo" style="background:var(--surface-2);border-radius:8px;padding:16px;margin-bottom:16px;display:none;">
+                                        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:12px;">Academic Details</div>
+                                        <div id="roleSpecificFields" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;"></div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" id="profileInfoBtn">💾 Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: PROFILE PHOTO -->
+                <div class="profile-tab-content" id="profileTabPicture">
+                    <div style="max-width:500px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Profile Photo</div>
+                            </div>
+
+                            <!-- Current picture display -->
+                            <div style="text-align:center;margin-bottom:24px;">
+                                <div id="currentPictureDisplay"></div>
+                                <div style="font-size:13px;color:var(--text-secondary);margin-top:12px;" id="currentPictureLabel">No profile photo set</div>
+                            </div>
+
+                            <!-- Upload zone -->
+                            <div class="picture-upload-zone" id="uploadZone">
+                                <input type="file" id="pictureFileInput" accept="image/jpeg,image/png,image/webp" />
+                                <div class="picture-preview-placeholder" id="previewPlaceholder">🖼️</div>
+                                <img id="previewImage" class="picture-preview" style="display:none;" alt="Preview" />
+                                <div class="upload-zone-text">Click or drag & drop your photo here</div>
+                                <div class="upload-zone-hint">JPG, PNG or WEBP · Maximum 3MB</div>
+                            </div>
+
+                            <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;">
+                                <button class="btn btn-primary" id="uploadPictureBtn" onclick="uploadProfilePicture()" style="flex:1;" disabled>
+                                    ⬆️ Upload Photo
+                                </button>
+                                <button class="btn btn-danger btn-sm" id="removePictureBtn" onclick="removeProfilePicture()" style="display:none;">
+                                    🗑️ Remove Photo
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tips card -->
+                        <div class="card" style="margin-top:16px;">
+                            <div class="card-header"><div class="card-title" style="font-size:14px;">Photo Tips</div></div>
+                            <div style="font-size:13px;color:var(--text-secondary);line-height:2;">
+                                <div>✅ Use a clear, well-lit photo of your face</div>
+                                <div>✅ Square images work best (1:1 ratio)</div>
+                                <div>✅ Minimum recommended size: 200×200 px</div>
+                                <div>❌ Avoid blurry or dark images</div>
+                                <div>❌ File size must be under 3MB</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: CHANGE PASSWORD -->
+                <div class="profile-tab-content" id="profileTabPassword">
+                    <div style="max-width:480px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Change Password</div>
+                            </div>
+                            <form id="changePasswordForm">
+                                <div class="form-grid single">
+                                    <div class="form-group">
+                                        <label>Current Password *</label>
+                                        <div style="position:relative;">
+                                            <input type="password" name="current_password" id="currentPassword" placeholder="Your current password" required style="padding-right:44px;" />
+                                            <button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;" onclick="togglePasswordField('currentPassword', this)">👁️</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>New Password *</label>
+                                        <div style="position:relative;">
+                                            <input type="password" name="new_password" id="newPassword" placeholder="Enter new password" required style="padding-right:44px;" />
+                                            <button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;" onclick="togglePasswordField('newPassword', this)">👁️</button>
+                                        </div>
+                                        <div class="password-strength" id="passwordStrengthBar">
+                                            <div class="password-strength-fill" id="passwordStrengthFill"></div>
+                                        </div>
+                                        <div class="password-strength-label" id="passwordStrengthLabel" style="color:var(--text-muted);"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Confirm New Password *</label>
+                                        <div style="position:relative;">
+                                            <input type="password" name="confirm_password" id="confirmPassword" placeholder="Repeat new password" required style="padding-right:44px;" />
+                                            <button type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;" onclick="togglePasswordField('confirmPassword', this)">👁️</button>
+                                        </div>
+                                        <div id="passwordMatchMsg" style="font-size:11px;margin-top:4px;"></div>
+                                    </div>
+                                </div>
+                                <div style="background:var(--surface-2);border-radius:8px;padding:14px;margin-bottom:16px;margin-top:8px;">
+                                    <div style="font-size:12px;color:var(--text-muted);line-height:1.8;">
+                                        Password must be at least 6 characters. Use a mix of letters, numbers and symbols for a stronger password.
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-full" id="changePasswordBtn">🔑 Update Password</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /content-area -->
+    </div><!-- /main-content -->
+</div><!-- /app-layout -->
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal" style="display:none;">
+    <div class="modal" style="max-width:420px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Confirm Action</h3>
+            <button class="modal-close" onclick="closeModal('confirmModal')">×</button>
+        </div>
+        <p id="confirmMessage" style="color:var(--text-secondary);margin-bottom:24px;font-size:14px;"></p>
+        <div style="display:flex;gap:12px;">
+            <button class="btn btn-outline" style="flex:1" onclick="closeModal('confirmModal')">Cancel</button>
+            <button class="btn btn-danger" style="flex:1" id="confirmActionBtn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT STUDENT MODAL -->
+<div class="modal-overlay" id="studentEditModal" style="display:none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Student</h3>
+            <button class="modal-close" onclick="closeModal('studentEditModal')">×</button>
+        </div>
+        <form id="studentEditForm">
+            <input type="hidden" id="editStudentId" />
+            <div class="form-grid single">
+                <div class="form-group"><label>First Name</label><input type="text" id="editStudentFirst" required /></div>
+                <div class="form-group"><label>Last Name</label><input type="text" id="editStudentLast" required /></div>
+                <div class="form-group"><label>Email</label><input type="email" id="editStudentEmail" required /></div>
+                <div class="form-group"><label>Level</label>
+                    <select id="editStudentLevel">
+                        <option value="100">100 Level</option><option value="200">200 Level</option>
+                        <option value="300">300 Level</option><option value="400">400 Level</option>
+                        <option value="500">500 Level</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Phone</label><input type="tel" id="editStudentPhone" /></div>
+                <div class="form-group"><label>Department</label><select id="editStudentDept"></select></div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:12px;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('studentEditModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="studentEditSubmit" style="flex:1;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- EDIT LECTURER MODAL -->
+<div class="modal-overlay" id="lecturerEditModal" style="display:none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Lecturer</h3>
+            <button class="modal-close" onclick="closeModal('lecturerEditModal')">×</button>
+        </div>
+        <form id="lecturerEditForm">
+            <input type="hidden" id="editLecturerId" />
+            <div class="form-grid single">
+                <div class="form-group"><label>Title</label>
+                    <select id="editLecturerTitle">
+                        <option value="">-- Select Title --</option>
+                        <option>Dr.</option><option>Prof.</option><option>Mr.</option><option>Mrs.</option><option>Ms.</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>First Name</label><input type="text" id="editLecturerFirst" required /></div>
+                <div class="form-group"><label>Last Name</label><input type="text" id="editLecturerLast" required /></div>
+                <div class="form-group"><label>Email</label><input type="email" id="editLecturerEmail" required /></div>
+                <div class="form-group"><label>Phone</label><input type="tel" id="editLecturerPhone" /></div>
+                <div class="form-group"><label>Specialization</label><input type="text" id="editLecturerSpec" /></div>
+                <div class="form-group"><label>Department</label><select id="editLecturerDept"></select></div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:12px;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('lecturerEditModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="lecturerEditSubmit" style="flex:1;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- EDIT COURSE MODAL -->
+<div class="modal-overlay" id="courseEditModal" style="display:none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Course</h3>
+            <button class="modal-close" onclick="closeModal('courseEditModal')">×</button>
+        </div>
+        <form id="courseEditForm">
+            <input type="hidden" id="editCourseId" />
+            <div class="form-grid single">
+                <div class="form-group"><label>Course Title</label><input type="text" id="editCourseTitle" required /></div>
+                <div class="form-group"><label>Credit Units</label><input type="number" id="editCourseUnits" min="1" max="6" required /></div>
+                <div class="form-group"><label>Semester</label>
+                    <select id="editCourseSemester">
+                        <option value="first">First Semester</option>
+                        <option value="second">Second Semester</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Level</label>
+                    <select id="editCourseLevel">
+                        <option value="100">100 Level</option><option value="200">200 Level</option>
+                        <option value="300">300 Level</option><option value="400">400 Level</option>
+                        <option value="500">500 Level</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Description</label><textarea id="editCourseDesc" placeholder="Optional description..."></textarea></div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:12px;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('courseEditModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="courseEditSubmit" style="flex:1;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- EDIT DEPARTMENT MODAL -->
+<div class="modal-overlay" id="deptEditModal" style="display:none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Department</h3>
+            <button class="modal-close" onclick="closeModal('deptEditModal')">×</button>
+        </div>
+        <form id="deptEditForm">
+            <input type="hidden" id="editDeptId" />
+            <div class="form-grid single">
+                <div class="form-group"><label>Name</label><input type="text" id="editDeptName" required /></div>
+                <div class="form-group"><label>Description</label><textarea id="editDeptDesc" placeholder="Optional description..."></textarea></div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:12px;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('deptEditModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="deptEditSubmit" style="flex:1;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- RESET PASSWORD MODAL -->
+<div class="modal-overlay" id="resetPasswordModal" style="display:none;">
+    <div class="modal" style="max-width:420px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Reset Password</h3>
+            <button class="modal-close" onclick="closeModal('resetPasswordModal')">×</button>
+        </div>
+        <form id="resetPasswordForm">
+            <input type="hidden" id="resetUserId" />
+            <div class="form-grid single">
+                <div class="form-group"><label>New Password</label><input type="password" id="resetNewPassword" placeholder="Enter new password" required /></div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:12px;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('resetPasswordModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="resetPasswordSubmit" style="flex:1;">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
